@@ -1,0 +1,45 @@
+name: CD
+
+on:
+  push:
+    paths:
+    - 'src/**'
+    - '.github/workflows/cd.yml'
+    - 'Directory.Build.props'
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100-preview.8.20417.9
+
+    - name: Build
+      run: |
+        dotnet build src/Jenson
+        dotnet build src/Jenson.Attributes
+
+    - name: Test
+      run: dotnet test test/Jenson.Test
+
+    - name: Pack
+      run: |
+        dotnet pack src/Jenson -c Release
+        dotnet pack src/Jenson.Attributes -c Release
+
+    - name: Publish
+      run: |
+        dotnet nuget push src\*\bin\Release\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/jjagg/index.json --skip-duplicate
+
