@@ -1,0 +1,10 @@
+# Vim
+*~
+
+# Build
+obj/
+bin/
+
+.vs/
+.idea/
+
